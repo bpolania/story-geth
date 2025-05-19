@@ -374,6 +374,18 @@ func (s *Ethereum) APIs() []rpc.API {
 			Namespace: "net",
 			Service:   s.netRPCService,
 		},
+		{
+			Namespace: "tx",
+			Version:   "1.0",
+			Service:   &DeployStatusAPI{backend: s},
+			Public:    true,
+		},
+		{
+			Namespace: "tx",
+			Version:   "1.0",
+			Service:   &BatchExecAPI{server: rpcServer},
+			Public:    true,
+		},
 	}...)
 }
 

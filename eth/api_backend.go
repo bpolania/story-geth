@@ -19,6 +19,7 @@ package eth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/big"
 	"time"
 
@@ -50,6 +51,25 @@ type EthAPIBackend struct {
 	allowUnprotectedTxs bool
 	eth                 *Ethereum
 	gpo                 *gasprice.Oracle
+}
+
+// GetDeployStatus returns the status of a deployment tx (success, reverted, pending, not_found).
+func (api *PublicEthereumAPI) GetDeployStatus(ctx context.Context, txHash common.Hash) (string, error) {
+	receipt, err := api.b.Eth().GetReceipt(ctx, txHash)
+	if err == nil && receipt != nil {
+		if receipt.Status == types.ReceiptStatusSuccessful && receipt.ContractAddress != (common.Address{}) {
+			return fmt.Sprintf("success:%s", receipt.ContractAddress.Hex()), nil
+		} else {
+			return "reverted", nil
+		}
+	}
+
+	tx := api.b.TxPool().Get(txHash)
+	if tx != nil {
+		return "pending", nil
+	}
+
+	return "not_found", nil
 }
 
 // ChainConfig returns the active chain configuration.
